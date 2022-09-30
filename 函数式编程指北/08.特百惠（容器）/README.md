@@ -79,4 +79,105 @@ class Container {
 这样就能将数据存储与数据操作封装在一起，让容器自己去运用函数。
 这是一种抽象，对函数运用的抽象。
 
+这种抽象是通过 map 方法来组合外部传递的函数。它以链式的方式，将多个自定义的函数组合到一起，
+实现一个完整的功能。
+看上去 compose 更适合上面的说法。它能够将多个函数组合到一起，以“通道”的方式传递参数。最后生成一个可复用的函数。
+
+## Maybe 
+
+这也是一种 functor。不同于 `Container` 这个 functor 将一些简单的逻辑封装在了内部。
+
+```javascript
+const Maybe = function(x) {
+  this.__value = x
+}
+
+Maybe.of = function(x) {
+  return new Maybe(x);
+}
+
+Maybe.prototype.isNothing = function() {
+  return (this.__value === null) || (this.__value === undefined);
+}
+
+Maybe.prototype.map = function(fun) {
+  return this.isNothing() ? Maybe.of(null) : Maybe.of(fun(this.__value));
+}
+
+```
+
+如果当前值是空的，那么就会继续返回空，不会执行 fun 方法。这样，如果链式调用中的一环出现了问题，
+后面的所有自定义函数都不会执行，都只会直接返回 `Maybe{ __value: null }` 
+
+---
+
+除了这种点记法(dot notation syntax)，还可以使用curry来“代理”任何functor
+这样可以保持一种 `pointfree` 的风格。
+
+
+我们的值没有完成它的使命，很有可能是其他代码分支造成的。我们的代码，就像薛定谔的猫一样，在某个特定的时间点有两种状态，
+而且应该保持这种状况不变直到最后一个函数为止。
+这样，哪怕代码有很多逻辑性的分支，也能保证一种线性的工作流。
+
+```javascript
+export const map = _curry(function(f, any_functor_at_all) {
+  return any_functor_at_all.map(f)
+}) 
+```
+
+### 应用实例
+
+```javascript
+//  withdraw :: Number -> Account -> Maybe(Account)
+var withdraw = curry(function(amount, account) {
+  return account.balance >= amount ?
+    Maybe.of({balance: account.balance - amount}) :
+    Maybe.of(null);
+});
+
+//  finishTransaction :: Account -> String
+var finishTransaction = compose(remainingBalance, updateLedger); // <- 假定这两个函数已经在别处定义好了
+
+//  getTwenty :: Account -> Maybe(String)
+var getTwenty = compose(map(finishTransaction), withdraw(20));
+
+
+getTwenty({ balance: 200.00});
+// Maybe("Your balance is $180.00")
+
+getTwenty({ balance: 10.00});
+// Maybe(null)
+```
+
+## 释放容器中的值
+
+数据不可能一直在容器里面，我们需要将容器中的数据取出来才能传递出去。
+
+```javascript
+export const maybe = _curry(function(x, f, m) {
+  return m.isNothing() ? x : f(m.__value);
+})
+```
+
+```javascript
+//  maybe :: b -> (a -> b) -> Maybe a -> b
+var maybe = curry(function(x, f, m) {
+  return m.isNothing() ? x : f(m.__value);
+});
+
+//  getTwenty :: Account -> String
+// “通道“ 式的参数传递，从右侧开始，上一个函数的执行结果作为下一个函数的如餐
+// 要求函数只有一个入参，如果有多个，使用 curry 处理
+var getTwenty = compose(
+  maybe("You're broke!", finishTransaction), withdraw(20)
+);
+
+// 这作为 “通道”的第一个函数的入参
+getTwenty({ balance: 200.00});
+// "Your balance is $180.00"
+
+getTwenty({ balance: 10.00});
+// "You're broke!"
+```
+
 

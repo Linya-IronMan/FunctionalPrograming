@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <div id="myDiv">Hello World!</div>
+  <script type="module">
+    import { IO } from "./io.js";
+    import * as _ from "ramda";
+    import {split, head} from "../utils.js"
+    console.log(IO, "io");
+    const io_window = new IO(() => window);
+    console.log("io innerwidth", io_window.map(win => win.innerWidth));
+
+    console.log("location split", io_window.map(_.prop("location")).map(_.prop('href')).map(split('/')));
+
+    const $ = function(selector) {
+      return new IO(() => document.querySelectorAll(selector));
+    }
+
+    console.log("myDiv", $('#myDiv').map(head).map(div => div.innerHTML));
+  </script> 
+  </body>
+</html>

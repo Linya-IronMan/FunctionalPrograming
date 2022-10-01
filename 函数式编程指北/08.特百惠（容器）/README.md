@@ -127,6 +127,9 @@ export const map = _curry(function(f, any_functor_at_all) {
 
 ### 应用实例
 
+我们需要对这个 map 进行了解。`map(fnCal)` 生成的函数需要传递任何一个 functor(函子)，这个函子会调用 map 方法，并将 fnCal 作为参数传入。
+
+
 ```javascript
 //  withdraw :: Number -> Account -> Maybe(Account)
 var withdraw = curry(function(amount, account) {
@@ -179,5 +182,103 @@ getTwenty({ balance: 200.00});
 getTwenty({ balance: 10.00});
 // "You're broke!"
 ```
+
+## Either “纯”错误处理
+
+throw/catch 的方式并不十分 "纯"。当一个错误被抛出的时候，我们并没有收到返回值，反而是得到了一个警告。
+> 纯函数需要一个输出，并得到一个输出。输出应当是必须要有的。
+
+使用Either，可以在发生错误的时候搜集到错误消息，并返回。
+
+**either.js**
+```javascript
+const Left = function(x) {
+  this.__value = x;
+}
+
+Left.of = function(x) {
+  return new Left(x);
+}
+
+Left.prototype.map = function(f) {
+  return this;
+}
+
+const Right = function(x) {
+  this.__value = x;
+}
+
+Right.of = function(x) {
+  return new Right(x);
+}
+
+Right.prototype.map = function(f) {
+  return Right.of(f(this.__value));
+}
+
+
+```
+
+Left 与 Right 可以称为 Either 的抽象类型的两个子类。
+
+如果出现错误，则使用 `Left.of()` 存储报错信息，若运行正常，则使用 `Right.of()` 存储返回数据。
+因为 `Left` 与 `Right` 都实现了相同的接口，并且具有相同的接口签名，所以在方法的调用上不会出现问题。
+而 `Left` 的 `map` 方法，虽然有 f 函数作为参数，但是实际上并没有用到它，而是直接将自身返回。
+
+这样，如果链式调用中的某一环节出现了错误，错误信息就会随着链式调用返回到最终的结果。如此，就可以冒泡获得错误信息，并统一进行处理。
+实际使用中，当然不会只将一个字符串作为错误信息返回，应当需要一个专门的结构体来构造错误信息
+
+
+## IO functor
+
+纯函数中又一个例子，它会产生副作用，但是我们通过将其包裹在另一个函数中，把它变得看起来像一个纯函数。
+
+```javascript
+const getFromStorage = function (key) {
+  return function() {
+      return localStorage[key];
+    }
+}
+```
+之所以说里面的函数不纯，是因为每次传入相同的key，返回的数据可能是不一样的。localStorage 是可以被其他地方改变的。
+封装之后的使用
+
+```javascript
+const getName = getFromStorage("name");
+const name = getName();
+```
+
+封装起来之后，就变成了从 Storage 中取出特定元素的函数生成器。然而也只是看起来像是纯函数，实际上并没有什么用，算是自我安慰。
+
+这里又一个IO functor，用于处理此类非纯函数。可以作为各种从外界函数中获取值的操作的容器。
+`IO` 的 `__value` 总是一个函数。`IO` 将"非纯执行动作" 捕获到包裹函数里，目的是延迟执行这个非纯动作。
+
+IO 的 `map` 方法中使用了compose，将当前 __value 函数的执行结果作为参数传入 map 的回调函数中。以此形成链式
+
+**IO.js**
+```javascript
+import { _curry, match, add } from "../utils.js";
+import * as _ from "ramda";
+
+const IO = function(f) {
+  this.__value = f;
+}
+
+IO.of = function(x) {
+  return new IO(function() {
+    return x;
+  }); 
+}
+
+IO.prototype.map = function(f) {
+  return new IO(_.compose(f, this.__value));
+}
+```
+
+
+
+
+
+
 
 

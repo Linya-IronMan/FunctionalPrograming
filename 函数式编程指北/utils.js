@@ -7,6 +7,12 @@ export const match = _.curry(function(what, str) {
   return str.match(what);
 });
 
+export const split = _curry(function(t, s) {
+  return String.prototype.split.call(t, s);
+});
+
+export const head = x => x[0];
+
 export const add = function(x) {
   return function(y) {
     return x + y;

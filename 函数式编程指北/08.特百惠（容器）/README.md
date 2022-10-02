@@ -353,6 +353,8 @@ IO.prototype.map = function(f) {
 
 ## 异步任务
 
+... 这里懒得看了，他说的方法感觉不如使用 functor 包裹 async 。
+
 
 
 

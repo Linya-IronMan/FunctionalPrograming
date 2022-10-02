@@ -275,6 +275,89 @@ IO.prototype.map = function(f) {
 }
 ```
 
+`io.html` 文件，直接使用了Esmodule语法引入npm包，需要通过 `npx vite` 的方式来启动。
+启动后访问 `io.html` 文件
+
+**File: io.html**
+```javascript
+  <div id="myDiv">Hello World!</div>
+  <script type="module">
+    import { IO } from "./io.js";
+    import * as _ from "ramda";
+    import {split, head} from "../utils.js"
+    console.log(IO, "io");
+    const io_window = new IO(() => window);
+    console.log("io innerwidth", io_window.map(win => win.innerWidth));
+
+    console.log("location split", io_window.map(_.prop("location")).map(_.prop('href')).map(split('/')));
+
+    const $ = function(selector) {
+      return new IO(() => document.querySelectorAll(selector));
+    }
+    console.log("myDiv", $('#myDiv').map(head).map(div => div.innerHTML));
+  </script>
+```
+
+需要注意的是，此处的输出中 `IO.__value` 仍是一个函数。只是书上以函数的执行返回结果展示输出，会更加直观。
+
+---
+
+> 书上有提到一种说法：“花点时间去找回你关于functor的直觉吧。把实现细节放在一边不管，你应该就能自然而然地对各种个样的容器使用 `map` 了。
+> 不管它是多么奇特怪异。“ 这个建议值得参考。
+
+数据如今在 IO 中以函数的方式存储，函数需要调用之后才能获得最后的数据值。
+数据的获取最终还是要通过 `new IO(() => {xxx}).__value()` 的方式来获取到。这样的调用不太符合 "纯函数"，但是没有关系
+收到影响的是最后的调用者，我们的 `IO functor` 纯度还是够的。
+
+下面是书中的例子。
+
+```javascript
+////// 纯代码库: lib/params.js ///////
+
+//  url :: IO String
+var url = new IO(function() { return window.location.href; });
+
+//  toPairs =  String -> [[String]]
+var toPairs = compose(map(split('=')), split('&'));
+
+//  params :: String -> [[String]]
+var params = compose(toPairs, last, split('?'));
+
+//  findParam :: String -> IO Maybe [String]
+var findParam = function(key) {
+  return map(compose(Maybe.of, filter(compose(eq(key), head)), params), url);
+};
+
+////// 非纯调用代码: main.js ///////
+
+// 调用 __value() 来运行它！
+findParam("searchTerm").__value();
+// Maybe(['searchTerm', 'wafflehouse'])
+```
+
+`__value` 中存储的是变化无常的“非纯函数”，为了让用户警醒它具有的这个特性，可以为这个 `__value` 换一个命名。
+
+
+```javascript
+var IO = function(f) {
+  this.unsafePerformIO = f;
+}
+
+IO.prototype.map = function(f) {
+  return new IO(_.compose(f, this.unsafePerformIO));
+}
+```
+
+这种修改并不会我们使用函数时的“纯度”，它只会影响到最终的获取调用。实际上可以看上面提到的 "释放容器中的值"，这只是让你在释放容器中的值时更加警醒
+最终可以通过 `findParam("searchTerm").unsavePerformIO()` 的方式进行调用。加强代码表达的语意效果。
+
+## 异步任务
+
+
+
+
+
+
 
 
 

@@ -3,6 +3,24 @@ import _ from "lodash";
 
 export const _curry = _.curry;
 
+export const replace = _curry((what, replacement, str) => {
+  return str.replace(what, replacement);
+});
+
+export const filter = _curry((f, ary) => ary.filter(f));
+
+/**
+* 函数生成器，能够根据输入返回输出。
+* */
+export const memoize = (f) => {
+  const cache = {};
+  return function() {
+    const arg_str = JSON.stringify(arguments);
+    cache[arg_str] = cache[arg_str] || f.apply(f, arguments);
+    return cache[arg_str];
+  }
+};
+
 export const match = _.curry(function(what, str) {
   return str.match(what);
 });

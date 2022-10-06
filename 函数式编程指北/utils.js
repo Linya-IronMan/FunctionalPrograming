@@ -56,4 +56,4 @@ export const maybe = _curry(function(x, f, m) {
   return m.isNothing() ? x : f(m.__value);
 })
 
-
+export const id = x => x;

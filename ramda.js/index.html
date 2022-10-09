@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <input type="file" multiple id="fileinput"> 
+
+    <script type="module">
+      import { _curry, Container,  getFiles, filesTransed,  _compose, isFileTypeZip, _map, isFileListHeadZip  } from "./index.js";
+      let input_file = document.getElementById("fileinput");
+      input_file.addEventListener("change", (e) => {
+        const files = Container.of(filesTransed(input_file));
+        console.log("file list:", files);
+      })
+    </script>
+  </body>
+</html>

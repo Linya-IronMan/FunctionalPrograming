@@ -9,6 +9,7 @@
 - [fp-ts](https://github.com/gcanti/fp-ts)
 - [《JavaScript函数式编程》](./5-【JavaScript函数式编程】.pdf)
 - [ramda.js api document](https://ramdajs.com/docs/#__)
+- [RxJS](https://www.youtube.com/watch?v=BA1vSZwzkK8&t=933s)
 
 ## 学习路线
 

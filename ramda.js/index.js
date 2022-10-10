@@ -102,7 +102,7 @@ export const fileType = _curry(file => {
 /** element input[type=file] => Container.of(File)[] */
 export const filesTransed = _compose(_map(fileType),trace("after getFiles: "), getFiles);
 
-// File => boolean
+/** File => boolean */ 
 export const isFileTypeZip = fileType => {
   const zipFileType = ["application/zip", "application/x-zip-compressed", "application/x-gzip","application/x-tar", "application/x-7z-compressed"];
   return zipFileType.includes(fileType);
@@ -120,9 +120,10 @@ export const zipFileNameList = _curry(async (file /* File */) => {
   return filesArray.map(_ => _.file.name);
 });
 
+/** File -> string[] */ 
 export const fileSuffix = _curry(async (file) => {
   const fileNameList = await zipFileNameList(file);
-  return _compose(_uniq, trace('before uniq'), _map(tellFileNameSuffix))(fileNameList);
+  return _compose(_uniq, _map(tellFileNameSuffix))(fileNameList);
 });
 
 /** UploadFile ----- end */ 

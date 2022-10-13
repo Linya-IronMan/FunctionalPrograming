@@ -11,7 +11,7 @@
 
 ## Logic
 
-### ifElse
+;l;jifElse
 
 ```javascript
 const inccount = r.ifelse(

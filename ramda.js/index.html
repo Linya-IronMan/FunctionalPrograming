@@ -10,11 +10,16 @@
     <input type="file" multiple id="fileinput"> 
 
     <script type="module">
-      import { _curry, zipFileNameList, fileSuffix,  Container,  getFiles, filesTransed, status, trace,  _compose, isFileTypeZip, _map, isFileListHeadZip  } from "./index.js";
+      import { _curry, zipFileNameList, fileSuffix,  getFiles, filesTransed, trace,  _compose, _map, isFileListHeadZip  } from "./index.js";
       let input_dom = document.getElementById("fileinput");
       input_dom.addEventListener("change", async (e) => {
-        const files = Container.of(filesTransed(input_dom));
-        console.log("file list:",  await fileSuffix (files.__value[0].__value.file));
+        const files = filesTransed(input_dom);
+        const d = await files.map(async _ => {
+          const result = await fileSuffix(_.file)
+          console.log("parse file result", result);
+          return result;
+        });
+        console.log("file list:",  files, d);
       })
     </script>
   </body>

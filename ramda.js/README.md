@@ -1,8 +1,12 @@
 
 # 通过实际的应用实践函数式编程
 
-
-
+项目启动：
+```shell
+cd ramda.js
+npx vite
+```
+使用 vite 启动的一个服务，能够直接使用 npm 安装对应的包并且通过ES Module 引入
 
 问题：
 1. compose 调用链中有异步函数，如何使用 await 将其加入到调用链中？

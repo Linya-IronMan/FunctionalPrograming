@@ -121,3 +121,84 @@ safeInc(1); //=> 2
 R.until(R.gt(R.__, 100), R.multiply(2))(1) // => 128
 ```
 
+## Promise
+
+## List 
+
+### intersection
+
+intersection 意为十字路口；交叉；
+
+可以用来获得两个数组重合的部分。
+
+```javascript
+R.intersection([1,2,3,4], [7,6,5,4,3]); //=> [4, 3]
+```
+
+## 函数调用链
+
+### on
+
+接收一个二元函数 f，一个一元函数 g 和两个值。将两个值应用到函数 g 上，在把返回的结果应用到函数 f 上。
+
+```javascript
+const containsInsensitive = R.on(R.contains, R.toLower);
+containsInsensitive('o', 'FOO'); //=> true
+```
+
+'o' 与 'FOO' 两个值，分别作为参数调用一次 `R.toLower` 一次，得到两个结果。
+这两个结果会同时传入 `R.contains` 中，得到最终的结果
+
+## Object 
+
+### evolve 
+
+递归地对 object 的属性进行变换，变换方式由 transformation 函数定义。所有非原始类型属性都通过引用来复制。
+如果某个 transformation 函数对应的键在被变换的 object 中不存在，那么该方法将不会执行。
+
+
+### pick
+
+返回对象的部分拷贝，其中仅包含指定键对应的属性。如果某个键不存在，则忽略该属性。
+
+```javascript
+R.pickBy(["A", "B"], {a: 1, b: 2, A: 3, B: 4}); //=> {A: 3, B: 4}
+```
+
+### pickBy
+
+
+返回对象的部分拷贝，其中仅包含 key 满足 predicate 的属性。
+这里说的 predicate 是一个函数，每个字段的 key 和对应的 value 都会被提取出来，然后传入函数进行判断。
+
+```javascript
+const isUpperCase = (val, key) => key.toUpperCase() === key;
+R.pickBy(isUpperCase, {a: 1, b: 2, A: 3, B: 4}); //=> {A: 3, B: 4}
+```
+
+### pickAll
+
+与 pick 类似，但 pickAll 会将不存在的属性以 key: undefined 键值对的形式返回。
+
+```javascript
+R.pickAll(['a', 'd'], {a: 1, b: 2, c: 3, d: 4}); //=> {a: 1, d: 4}
+R.pickAll(['a', 'e', 'f'], {a: 1, b: 2, c: 3, d: 4}); //=> {a: 1, e: undefined, f: undefined}
+```
+
+### omit
+
+删除对象中给定的 keys 对应的属性。
+
+```javascript
+R.omit(['a', 'd'], {a: 1, b: 2, c: 3, d: 4}); //=> {b: 2, c: 3}
+```
+
+
+
+
+
+
+
+
+
+

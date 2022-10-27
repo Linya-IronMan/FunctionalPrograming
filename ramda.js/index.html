@@ -10,17 +10,20 @@
     <input type="file" multiple id="fileinput"> 
 
     <script type="module">
-      import { _curry, zipFileNameList, fileSuffix,  getFiles, filesTransed, trace,  _compose, _map, isFileListHeadZip  } from "./index.js";
+      import { isZip, zipFileNameList,modalCheckForSimpleFile, fileSuffix,  getFiles, fileInit, trace,  _compose, _map, isFileListHeadZip  } from "./index.js";
+      import * as R from "ramda";
+      const fileList = [];
       let input_dom = document.getElementById("fileinput");
+      const zipFileModalCheck = () => {};
       input_dom.addEventListener("change", async (e) => {
-        const files = filesTransed(input_dom);
-        const d = await files.map(async _ => {
-          const result = await fileSuffix(_.file)
-          console.log("parse file result", result);
-          return result;
-        });
-        console.log("file list:",  files, d);
-      })
+        let files = R.compose(R.map(fileInit), getFiles)(input_dom);
+        files = files.map(R.ifElse(
+          isZip,
+          R.compose(zipFileModalCheck, trace("is zip")),
+          R.compose(modalCheckForSimpleFile, trace("is not Zip")),
+        ))(files);
+        console.log(files, "simpleFileModalCheck");
+      });
     </script>
   </body>
 </html>

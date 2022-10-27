@@ -5,6 +5,7 @@ export const _map = _.map;
 export const _head = _.head;
 export const _last = _.last;
 export const _uniq = _.uniq;
+import * as R from "ramda";
 import  Archive from './fileAnalyze';
 /** utils ----- start */
 
@@ -14,16 +15,9 @@ export const trace = _.curry(function(tag, x){
 });
 
 
-/** utils ----- end */
-
-/** ========================================================================================================= */
-
-/** UploadFile ----- start */ 
-
-// inputFileElement => File[]
 export const getFiles = inputFileEle => inputFileEle.files;
 
-export const fileType = _curry(file => {
+export const fileInit= file => {
   return {
     file: new File(
       [file], file.name, {
@@ -32,17 +26,18 @@ export const fileType = _curry(file => {
       : file.type === "application/vnd.ms-excel"
       ? "text/csv"
       : file.type,
-    }) 
+    }), 
+    status: 0,
+    modalMatched: [],
   };
-});
+}
 
-/** element input[type=file] => Container.of(File)[] */
-export const filesTransed = _compose(_map(fileType),trace("after getFiles: "), getFiles);
+export const filesTransed = _compose(_map(fileInit), trace("after getFiles: "), getFiles);
 
 /** File => boolean */ 
-export const isZip = fileType => {
+export const isZip = fileInit=> {
   const zipFileType = ["application/zip", "application/x-zip-compressed", "application/x-gzip","application/x-tar", "application/x-7z-compressed"];
-  return zipFileType.includes(fileType);
+  return zipFileType.includes(fileInit);
 };
 
 // input[type="file"] => boolean
@@ -58,11 +53,147 @@ export const zipFileNameList = _curry(async (file /* File */) => {
 });
 
 /** File -> string[] */ 
-export const fileSuffix = _curry(async (file) => {
+export const fileSuffix =async (file) => {
   const fileNameList = await zipFileNameList(file);
   return _compose(_uniq, _map(tellFileNameSuffix))(fileNameList);
-});
+};
+
+const modalCheckRules = {
+  "modalFileTypesSimpleFiles": {
+    "0": [
+      "csv"
+    ],
+    "4": [
+      "csv",
+      "tsv",
+      "json"
+    ]
+  },
+  "modalFileTypes": {
+    "0": [
+      "csv"
+    ],
+    "1": [
+      "avi",
+      "mp4",
+      "csv",
+      "jpg",
+      "jpeg",
+      "png",
+      "bmp",
+      "json",
+      "wav"
+    ],
+    "2": [
+      "csv",
+      "jpeg",
+      "jpg",
+      "png",
+      "bmp",
+      "json",
+      "npy",
+      "txt",
+      "xml"
+    ],
+    "3": [
+      "csv",
+      "wav",
+      "mp3"
+    ],
+    "4": [
+      "csv",
+      "data",
+      "json",
+      "tsv",
+      "txt"
+    ],
+    "5": [
+      "csv",
+      "jpg",
+      "json",
+      "png"
+    ]
+  },
+  "labelFileTypes": {
+    "1": [
+      "csv"
+    ],
+    "2": [
+      "csv",
+      "json",
+      "txt",
+      "xml"
+    ],
+    "3": [
+      "csv"
+    ],
+    "4": [
+      "csv",
+      "txt"
+    ]
+  }
+}
 
 /** UploadFile ----- end */ 
+const ModalType = {
+  Table: '0',
+  Video: '1',
+  Image: '2',
+  Audio: '3',
+  Txt: '4',
+  Multi: '5',
+  Unkonw: '6',
+}
 
+// 规则-类型 映射组
+const modalFeatureFileMap = {
+  [ModalType.Table]: ["csv"],
+  [ModalType.Video]: ["avi", "mp4"],
+  [ModalType.Image]: ["jpeg", "jpg", "png", "bmp", "npy"],
+  [ModalType.Audio]: ["wav", "mp3"],
+  [ModalType.Txt]: ["json", "txt"],
+};
+
+/**
+* 1. 拿到文件对象，获取基本信息，获取没有被解析完成的文件列表
+*/
+
+
+/**
+*
+*/
+export const belongTo= R.curry((arr, target) => R.includes(target, arr))
+
+/** 
+* 检测文件清单是否全属于指定模态支持的文件列表
+* @param：rules [csv, json, txt]
+* @param: suffixs: [csv]
+* return：boolean
+*/
+export const isAllBelongTo = R.curry((rules, suffixList) => R.all(belongTo(rules))(suffixList));
+// const isAllBelongToSimpleTable = isAllBelongTo(modalCheckRules.modalFileTypesSimpleFiles[ModalType.Table])
+// console.log("isAllBelongToSimpleTable", isAllBelongToSimpleTable(['csv']));
+
+/**
+* 根据不同的规则识别当前文件应该属于什么模态类型
+* @param  modalRule { 0: [csv, json], 1: [...], 2: ... }
+* @param  suffixList [csv, json]
+* @return [0, 1, 2]     
+*/ 
+const getMatchedModalBy = R.curry((modalRule, suffixs) => R.filter(
+  modal => isAllBelongTo(modalRule[modal], suffixs), 
+  R.keys(modalRule)
+));
+
+const getMatchedModalBySimpleRules = getMatchedModalBy(modalCheckRules.modalFileTypesSimpleFiles);
+console.log(getMatchedModalBySimpleRules(['csv']), "getMatchedModalBySimpleRules");
+// 1. 遍历 modalRule 的 key value =》 map  
+// 2. 判断suffix 是否全属于当前modal对应的Rule
+// 3. 如果属于，将这个模态返回
+
+const fileSuffix = fileName => fileName.split(".").pop() || "";
+
+export const modalCheckForSimpleFile = () => {
+
+}
 

@@ -1,29 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title></title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="css/style.css" rel="stylesheet">
-  </head>
-  <body>
-    <input type="file" multiple id="fileinput"> 
+    <head>
+        <title></title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link href="css/style.css" rel="stylesheet" />
+    </head>
+    <body>
+        <input type="file" multiple id="fileinput" />
+        <div id="result"></div>
 
-    <script type="module">
-      import { isZip, zipFileNameList,modalCheckForSimpleFile, fileSuffix,  getFiles, fileInit, trace,  _compose, _map, isFileListHeadZip  } from "./index.js";
-      import * as R from "ramda";
-      const fileList = [];
-      let input_dom = document.getElementById("fileinput");
-      const zipFileModalCheck = () => {};
-      input_dom.addEventListener("change", async (e) => {
-        let files = R.compose(R.map(fileInit), getFiles)(input_dom);
-        files = files.map(R.ifElse(
-          isZip,
-          R.compose(zipFileModalCheck, trace("is zip")),
-          R.compose(modalCheckForSimpleFile, trace("is not Zip")),
-        ))(files);
-        console.log(files, "simpleFileModalCheck");
-      });
-    </script>
-  </body>
+        <script type="module">
+            import {
+                isZip,
+                modalCheckForZipFile,
+                modalCheckForSimpleFile,
+                fileSuffix,
+                getFiles,
+                fileInit,
+                trace,
+                _compose,
+                _map,
+                isFileListHeadZip,
+            } from './index.js';
+            import * as R from 'ramda';
+            const fileList = [];
+            let input_dom = document.getElementById('fileinput');
+            const resultContainer = document.getElementById('result');
+            const zipFileModalCheck = () => {};
+
+            input_dom.addEventListener('change', async e => {
+                let files = R.compose(R.map(fileInit), getFiles)(input_dom);
+                const result = [];
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (isZip(file)) {
+                        result.push(
+                            await R.compose(
+                                modalCheckForZipFile,
+                                trace('is zip')
+                            )(file)
+                        );
+                    } else {
+                        result.push(
+                            R.compose(
+                                modalCheckForSimpleFile,
+                                trace('is not Zip')
+                            )(file)
+                        );
+                    }
+                }
+                resultContainer.innerHTML = result.map(_ => {
+                    return `
+                      文件名称：${_.file.name} <br/>
+                      模态匹配结果：${_.modalMatchedLabel}<br/>
+                      <hr/>
+                    `;
+                });
+            });
+        </script>
+    </body>
 </html>

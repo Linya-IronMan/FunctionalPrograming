@@ -9,6 +9,8 @@ import * as R from 'ramda';
 import Archive from './fileAnalyze';
 /** utils ----- start */
 
+export const toPromise = R.curry((fn, param) => Promise.resolve(fn(param)));
+
 export const trace = _.curry(function (tag, x) {
     console.log(tag, x);
     return x;

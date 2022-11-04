@@ -21,6 +21,7 @@
                 trace,
                 _compose,
                 _map,
+                toPromise,
                 isFileListHeadZip,
             } from './index.js';
             import * as R from 'ramda';
@@ -32,25 +33,17 @@
             input_dom.addEventListener('change', async e => {
                 let files = R.compose(R.map(fileInit), getFiles)(input_dom);
                 const result = [];
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    if (isZip(file)) {
-                        result.push(
-                            await R.compose(
-                                modalCheckForZipFile,
-                                trace('is zip')
-                            )(file)
-                        );
-                    } else {
-                        result.push(
-                            R.compose(
-                                modalCheckForSimpleFile,
-                                trace('is not Zip')
-                            )(file)
-                        );
-                    }
-                }
-                resultContainer.innerHTML = result.map(_ => {
+                files = await Promise.all(
+                    R.map(
+                        R.ifElse(
+                            isZip,
+                            modalCheckForZipFile,
+                            toPromise(modalCheckForSimpleFile)
+                        ),
+                        files
+                    )
+                );
+                resultContainer.innerHTML = files.map(_ => {
                     return `
                       文件名称：${_.file.name} <br/>
                       模态匹配结果：${_.modalMatchedLabel}<br/>

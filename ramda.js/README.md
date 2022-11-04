@@ -8,8 +8,32 @@ npx vite
 ```
 使用 vite 启动的一个服务，能够直接使用 npm 安装对应的包并且通过ES Module 引入
 
+主要文件是 `index.html` 与 `index.js` ，其余文件是其他方式的实现，其中对 ramda.js 工具函数的应用非常有参考价值。
+
 问题：
 1. compose 调用链中有异步函数，如何使用 await 将其加入到调用链中？
+   1. 可以使用 andThen。需要注意的是，一条调用链上有异步，择最终生成的函数也是异步的。
+      const data = R.compose(andThen(R.double), R.add);
+      const num1 = await data(2);
+
+
+# 学习提示
+
+最好是自己寻找或者设计一个应用场景，然后以函数式编程的方式完成它。
+
+可以从自身完成过的业务中抽出一个场景来完成，本项目就是这样的。
+
+没必要一开始就想着直接写出函数式编程风格的代码，那样很难进行下去。
+好的代码是改出来的，况且开始的时候连一些常用的工具函数都不太熟悉。
+
+可以尝试先进行逻辑拆分，参考单一职责对功能函数进行拆分。然后在保证函数的“纯度”的前提下去书写拆分出来的“单一职责函数”。
+最终，根据业务需求，借助工具函数将散落的功能函数组合成声明式的代码。
+
+一份好的声明式代码应该具有“自文档性”，也就是无需更多的注释的情况下，就能比较清晰地表达出业务逻辑。
+这份逻辑是通过工具函数、工具函数名来表达的。
+
+阅读 ramda.js 的工具函数，可以发现，其中很多函数名 + 参数的组合是能够构成 ”主谓宾“ 这样的语法结构的。
+理解函数名与参数之间的联系，能够帮助记忆这些工具函数，并且在书写自己的函数的时候，同样可以参考实现这样的语法结构，保证风格一致的同时，提高代码可读性。
 
 # ramda.js 常用方法
 
@@ -17,7 +41,7 @@ npx vite
 
 ### ifElse
 
-```javascript
+```**javascript**
 const inccount = r.ifelse(
   r.has('count'),
   r.over(r.lensprop('count'), r.inc),
@@ -150,6 +174,57 @@ containsInsensitive('o', 'FOO'); //=> true
 这两个结果会同时传入 `R.contains` 中，得到最终的结果
 
 ## Object 
+
+### tap
+
+对输入的值执行给定的函数，然后返回输入的值。
+
+若传入的是 transfomer，则当前函数用作 transducer，对传入的 transformer 进行封装。
+
+```javascript
+const sayX = x => console.log('x is ' + x);
+R.tap(sayX, 100); //=> 100
+// logs 'x is 100'
+```
+
+应用于那些有副作用的函数，它们会改变传入的参数。
+
+```javascript
+const setSuffixList = target => target.suffixList = ['zip', 'xls']
+R.pipe(
+  R.tap(setSuffixList),
+  ...
+)(file)
+```
+
+它仍能在语意上就表现出数据的流动。
+
+
+### set
+
+通过 lens 对数据结构聚焦的部分进行设置。
+
+```javascript
+const xLens = R.lensProp('x');
+
+R.set(xLens, 4, {x: 1, y: 2});  //=> {x: 4, y: 2}
+R.set(xLens, 8, {x: 1, y: 2});  //=> {x: 8, y: 2}
+```
+
+所谓的聚焦部分就是指明将要访问的对象的属性。这里通过 `R.lensProp('x')` 指明。
+如果将要访问的是数组中的某个元素，需要通过 `R.lensIndex(index)`进行指明。
+
+和 set 类似的还有一个 over
+
+
+### of
+
+`R.of` 将给定值作为元素，封装成单元素数组。
+
+```javascript
+R.of(null); //=> [null]
+R.of([42]); //=> [[42]]
+```
 
 ### evolve 
 

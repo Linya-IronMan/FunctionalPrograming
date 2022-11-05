@@ -27,7 +27,7 @@ class Container {
 
 /** Either */
 
-class Left {
+export class Left {
   __value;
   constructor(x) {
     this.__value = x;
@@ -38,12 +38,12 @@ class Left {
   }
 
   map(func) {
-    return Left.of(func(this.__value));
+    return this;
   }
 }
 
 
-class Right {
+export class Right {
   __value;
   constructor(x) {
     this.__value = x;
@@ -59,9 +59,9 @@ class Right {
 }
 
 export const either = R.curry((tFn, fFn, e) => {
-  switch(v.constructor) {
-    case Left: return tFn(e.__value);
-    case Right: return fFn(e.__value);
+  switch(e.constructor) {
+    case Left: return fFn(e.__value);
+    case Right: return tFn(e.__value);
   }
 });
 

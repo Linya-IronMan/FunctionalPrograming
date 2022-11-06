@@ -2,7 +2,13 @@
 
 本章主要是对函数式编程中的 控制流、异常处理、异步操作以及状态等内容进行说明。
 
-这些内容都可以利用容器的概念来进行表述。
+~~这些内容都可以利用容器的概念来进行表述。~~
+**大雾，控制流、异常处理、异步操作这些内容，实际上都可以通过一些工具函数来进行。比如 ramda.js 中的 `R.ifElse` 、
+`R.andThen` 等工具函数。
+
+建议通读一下 `ramda.js` 中的工具函数，之后会"什么东西适合容器来做，什么东西只要工具函数就能够满足要求"有更深的理解。
+
+容器，目前我还没有感受到有什么东西是非容器不可的。
 
 ## 使用容器存储、操作数据
 
@@ -17,8 +23,11 @@ const Container = function(x) {
 Container.of = function(x) {return new Container(x)};
 ```
 
-通过 `of` 来创建一个`Container` 包裹的数据，能够避免使用 `new` 来创建 Container 实例。
-这是在语法上更方便之后的方法调用。
+~~通过 `of` 来创建一个`Container` 包裹的数据，能够避免使用 `new` 来创建 Container 实例。
+这是在语法上更方便之后的方法调用。~~
+这是一种简单的理解，实际上 of 的作用是一种声明，表示这个数据之后都可以随时调用 `map` 方法来进行数据处理。
+也可以理解为 `of` 是在宣告这个数据在此处需要遵循函数式编程中"容器"的相关规范，需要注意与一般对象实例的区分。
+
 
 将容器存储与数据之后，方便对数据的操作，所以需要提供一个API用于自定义对存储数据的操作
 
@@ -109,6 +118,8 @@ Maybe.prototype.map = function(fun) {
 如果当前值是空的，那么就会继续返回空，不会执行 fun 方法。这样，如果链式调用中的一环出现了问题，
 后面的所有自定义函数都不会执行，都只会直接返回 `Maybe{ __value: null }` 
 
+**问题：有没有可能，一个数据最开始是存储在Container中的，但是后面需要转存到Maybe中。这种情况应该怎么处理？**
+
 ---
 
 除了这种点记法(dot notation syntax)，还可以使用curry来“代理”任何functor
@@ -119,6 +130,9 @@ Maybe.prototype.map = function(fun) {
 而且应该保持这种状况不变直到最后一个函数为止。
 这样，哪怕代码有很多逻辑性的分支，也能保证一种线性的工作流。
 
+这种薛定谔的状态让我们没办法确定函数到底是在什么时候出现了错误，因为整个链式调用基本都是封闭的。
+如果想要进行调试，我们只能使用 trace 一步一步检查。
+
 ```javascript
 export const map = _curry(function(f, any_functor_at_all) {
   return any_functor_at_all.map(f)
@@ -126,9 +140,6 @@ export const map = _curry(function(f, any_functor_at_all) {
 ```
 
 ### 应用实例
-
-我们需要对这个 map 进行了解。`map(fnCal)` 生成的函数需要传递任何一个 functor(函子)，这个函子会调用 map 方法，并将 fnCal 作为参数传入。
-
 
 ```javascript
 //  withdraw :: Number -> Account -> Maybe(Account)
@@ -157,19 +168,13 @@ getTwenty({ balance: 10.00});
 数据不可能一直在容器里面，我们需要将容器中的数据取出来才能传递出去。
 
 ```javascript
-export const maybe = _curry(function(x, f, m) {
-  return m.isNothing() ? x : f(m.__value);
-})
-```
-
-```javascript
 //  maybe :: b -> (a -> b) -> Maybe a -> b
-var maybe = curry(function(x, f, m) {
+var maybe = curry(function(msg/* string */, f /* handler */, m /* functor */ {
   return m.isNothing() ? x : f(m.__value);
 });
 
 //  getTwenty :: Account -> String
-// “通道“ 式的参数传递，从右侧开始，上一个函数的执行结果作为下一个函数的如餐
+// “通道“ 式的参数传递，从右侧开始，上一个函数的执行结果作为下一个函数的入参
 // 要求函数只有一个入参，如果有多个，使用 curry 处理
 var getTwenty = compose(
   maybe("You're broke!", finishTransaction), withdraw(20)
@@ -182,6 +187,7 @@ getTwenty({ balance: 200.00});
 getTwenty({ balance: 10.00});
 // "You're broke!"
 ```
+
 
 ## Either “纯”错误处理
 
@@ -215,11 +221,10 @@ Right.of = function(x) {
 Right.prototype.map = function(f) {
   return Right.of(f(this.__value));
 }
-
-
 ```
 
-Left 与 Right 可以称为 Either 的抽象类型的两个子类。
+
+Left 与 Right 可以称为 Either 的抽象类型的两个子类。实际上就是两个基础的容器，只是他们的命名具有语意。
 
 如果出现错误，则使用 `Left.of()` 存储报错信息，若运行正常，则使用 `Right.of()` 存储返回数据。
 因为 `Left` 与 `Right` 都实现了相同的接口，并且具有相同的接口签名，所以在方法的调用上不会出现问题。
@@ -228,6 +233,29 @@ Left 与 Right 可以称为 Either 的抽象类型的两个子类。
 这样，如果链式调用中的某一环节出现了错误，错误信息就会随着链式调用返回到最终的结果。如此，就可以冒泡获得错误信息，并统一进行处理。
 实际使用中，当然不会只将一个字符串作为错误信息返回，应当需要一个专门的结构体来构造错误信息
 
+
+Either 实际上可以看作  `R.ifElse` 的某种封装，他们确实很相似，只是 `R.ifElse` 会将判断条件外显。比如：
+
+```javascript
+ifElse(
+  isZip,
+  checkModalForZip,
+  checkModalForSimpleFile
+)
+```
+
+而Either会将判断条件内敛，实际上也是一种条件判断的执行。
+
+某种程度上我们可以使用 ifElse 替换Either，只要将 Either 内部的判断条件抽来。
+
+```javascript
+const isLeft = e => e.constructor == Left; 
+ifElse(
+  isLeft,
+  add,
+  console.error
+)
+```
 
 ## IO functor
 
@@ -274,6 +302,13 @@ IO.prototype.map = function(f) {
   return new IO(_.compose(f, this.__value));
 }
 ```
+
+对于IO的理解，虽然IO这个 functor 的 __value 是一个函数，但是我们不能这么理解。
+注意观察 `IO.of` 的实现，我们会获得一个IO functor，它的 __value 是一个函数，我们需要
+`IO.of(123).__value()`之后才会获得123。
+IO 函子将一个非纯函数包装到其中，目的是延迟执行这个非纯函数。
+实际上，我们可以理解为我们用IO包裹的就是这个 123。只不过，在实际应用中，这个123 可能是需要通过异步来进行请求。
+
 
 `io.html` 文件，直接使用了Esmodule语法引入npm包，需要通过 `npx vite` 的方式来启动。
 启动后访问 `io.html` 文件
@@ -348,15 +383,39 @@ IO.prototype.map = function(f) {
 }
 ```
 
-这种修改并不会我们使用函数时的“纯度”，它只会影响到最终的获取调用。实际上可以看上面提到的 "释放容器中的值"，这只是让你在释放容器中的值时更加警醒
+这种修改并不会改变我们使用函数时的“纯度”，它只会影响到最终的获取调用。实际上可以看上面提到的 "释放容器中的值"，这只是让你在释放容器中的值时更加警醒
 最终可以通过 `findParam("searchTerm").unsavePerformIO()` 的方式进行调用。加强代码表达的语意效果。
 
 ## 异步任务
 
-... 这里懒得看了，他说的方法感觉不如使用 functor 包裹 async 。
+根据我对异步任务的理解，设计了一个小的demo: 
+[函数式编程-容器实验](../../ramda.js/container/README.md)
 
+## 一点理论
 
+这一部分讲述的还是范畴学，以及函数式编程满足的一些实用的运算定律。
 
+```javascript
+// identity
+map(id) === id;
+
+// composition
+compose(map(f), map(g)) === map(compose(f, g));
+```
+
+而实际上，容器也是范畴学的一种实践。
+
+![容器在范畴学中的作用](https://llh911001.gitbooks.io/mostly-adequate-guide-chinese/content/images/catmap.png)
+
+![](https://llh911001.gitbooks.io/mostly-adequate-guide-chinese/content/images/functormap.png)
+
+这张图除了能表示态射借助 functor F 完成从一个范畴到另一个范畴的映射之外，我们发现它还符合交换律，也就是说，顺着箭头的方向往前，形成的每一个路径都指向同一个结果。不同的路径意味着不同的行为，但最终都会得到同一个数据类型。这种形式化给了我们原则性的方式去思考代码——无须分析和评估每一个单独的场景，只管可以大胆地应用公式即可
+
+不论是先执行普通函数最后使用 functor 进行包裹，还是直接使用 functor 将整个函数调用逻辑包裹，实际上都是一样的。
+
+这里还介绍了一种特殊的 functor —— Compose，类似 R.compose ，不过它是用来对各个 functor 进行组合的。这里有些复杂，暂时搁置不进行深入。
+
+functor 的数量实际上是无限的，functor 的意义就是将各种数据装进 box 中，之前介绍的工具还不够齐全。
 
 
 

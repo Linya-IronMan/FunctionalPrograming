@@ -37,7 +37,7 @@ export class Left {
     return new Left(x);
   }
 
-  map(func) {
+  map() {
     return this;
   }
 }

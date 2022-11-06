@@ -417,6 +417,8 @@ compose(map(f), map(g)) === map(compose(f, g));
 
 functor 的数量实际上是无限的，functor 的意义就是将各种数据装进 box 中，之前介绍的工具还不够齐全。
 
+# Monad
+
 
 
 

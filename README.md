@@ -26,6 +26,8 @@
 
 ## 总结
 
+[参考：函数式编程总结.pdf](https://github.com/Linya-IronMan/FunctionalPrograming/blob/main/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B%E6%80%BB%E7%BB%93.pdf)
+
 ![image](https://github.com/Linya-IronMan/FunctionalPrograming/assets/77786952/8d7364fc-4542-410e-abd8-fa70c930cbbc)
 
 ![image](https://github.com/Linya-IronMan/FunctionalPrograming/assets/77786952/3e596b3b-6cb1-42cd-8478-778e7d6cc97b)

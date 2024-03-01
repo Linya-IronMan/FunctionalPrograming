@@ -24,3 +24,18 @@
 3. 借助函数式编程完成一个实践。将实际业务中的一个模块改造为函数式编程范式
 
 
+## 总结
+
+![image](https://github.com/Linya-IronMan/FunctionalPrograming/assets/77786952/8d7364fc-4542-410e-abd8-fa70c930cbbc)
+
+![image](https://github.com/Linya-IronMan/FunctionalPrograming/assets/77786952/3e596b3b-6cb1-42cd-8478-778e7d6cc97b)
+
+![image](https://github.com/Linya-IronMan/FunctionalPrograming/assets/77786952/868ff393-96de-4baf-9d66-b3aa62a06900)
+
+![image](https://github.com/Linya-IronMan/FunctionalPrograming/assets/77786952/f8d85db5-ada1-4bb5-a886-22b987961739)
+
+![image](https://github.com/Linya-IronMan/FunctionalPrograming/assets/77786952/2e0e4f33-6278-4cfa-b942-8dac3495b41c)
+
+![image](https://github.com/Linya-IronMan/FunctionalPrograming/assets/77786952/096bf35b-e9a7-4610-8807-edcb7ce94ea0)
+
+
